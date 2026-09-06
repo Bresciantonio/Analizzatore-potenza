@@ -32,7 +32,7 @@
             margin-bottom: 10px;
         }
         .header h1 { margin: 0; color: #1a365d; font-size: 24px; }
-        .header p { margin: 5px 0 0 0; color: #718096; font-size: 14px; }
+        .header p { margin: 5px 0 0 0; color: #718096; font-size: 14px; font-style: italic; }
 
         .panel-inputs {
             flex: 1;
@@ -58,12 +58,17 @@
         }
         .input-group.tariffa { border-left-color: #0b3c5d; }
 
-        /* --- Toggle Domestico / Business --- */
+        /* --- Toggle IVA --- */
         .uso-toggle {
             background: #f8fafc;
             padding: 10px 12px;
             border-radius: 8px;
             border-left: 5px solid #6b46c1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .uso-toggle-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -73,9 +78,11 @@
             font-weight: bold;
             font-size: 13px;
             color: #2d3748;
+            white-space: nowrap;
         }
         .uso-switch {
             display: flex;
+            flex-shrink: 0;
             border: 1px solid #cbd5e0;
             border-radius: 20px;
             overflow: hidden;
@@ -83,9 +90,9 @@
         }
         .uso-switch input { display: none; }
         .uso-switch label {
-            padding: 6px 14px;
+            padding: 6px 16px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             color: #4a5568;
             background: #edf2f7;
             transition: background 0.15s, color 0.15s;
@@ -95,10 +102,9 @@
             color: #ffffff;
         }
         .uso-hint {
-            width: 100%;
-            font-size: 11px;
+            font-size: 10.5px;
             color: #718096;
-            margin-top: 4px;
+            line-height: 1.4;
         }
 
         .market-params {
@@ -138,6 +144,13 @@
             font-weight: bold;
             width: 100%;
             box-sizing: border-box;
+        }
+        .nota-metodo {
+            font-size: 10px;
+            color: #a0aec0;
+            font-style: italic;
+            line-height: 1.4;
+            margin-top: -4px;
         }
 
         .input-group label {
@@ -393,7 +406,6 @@
             .area-caption { font-size: 10px; max-width: 100%; }
             .legend-container { grid-template-columns: 1fr; gap: 12px; }
             .legend-note { grid-column: span 1; }
-            .uso-toggle { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -402,19 +414,22 @@
 <div class="container">
     <div class="header">
         <h1>Simulatore - Scontrino dell'Energia</h1>
+        <p>«Il prezzo dell'energia non si calcola col frullatore, ma con il bilancino del farmacista.»</p>
     </div>
 
     <div class="panel-inputs">
 
         <div class="uso-toggle">
-            <span class="uso-label">Aliquota IVA applicata</span>
-            <div class="uso-switch">
-                <input type="radio" name="uso" id="uso-domestico" value="domestico">
-                <label for="uso-domestico">10%</label>
-                <input type="radio" name="uso" id="uso-business" value="business" checked>
-                <label for="uso-business">22%</label>
+            <div class="uso-toggle-row">
+                <span class="uso-label">Aliquota IVA</span>
+                <div class="uso-switch">
+                    <input type="radio" name="uso" id="uso-domestico" value="domestico">
+                    <label for="uso-domestico">10%</label>
+                    <input type="radio" name="uso" id="uso-business" value="business" checked>
+                    <label for="uso-business">22%</label>
+                </div>
             </div>
-            <div class="uso-hint">Il 10% è l'aliquota agevolata, il 22% quella ordinaria: la scelta non dipende in modo automatico dal tipo di cliente. In generale l'uso domestico rientra nel 10% e le forniture non domestiche nel 22%, ma esistono eccezioni previste dalla norma (es. alcune attività agricole, manifatturiere o energivore) che possono avere il 10% anche fuori dall'uso domestico.</div>
+            <div class="uso-hint">22% ordinaria (generalità forniture non domestiche); 10% agevolata solo in casi specifici previsti dalla norma (domestico, agricolo, manifatturiero, estrattivo ecc.).</div>
         </div>
 
         <div class="input-group">
@@ -447,11 +462,11 @@
 
         <div class="market-params">
             <h3>⚙️ Parametri dello Scontrino</h3>
-            <div class="hint">I kWh incidono su Energia, Accise e Trasporto. La Potenza incide su Energia (corrispettivo di capacità), Accise e Trasporto. Quota Fissa e PUN incidono solo sullo spicchio Energia.</div>
+            <div class="hint">kWh → Energia, Rete/Oneri, Accise. kW → Quota Potenza. Quota Fissa e PUN solo su Energia.</div>
 
             <div class="param-field full">
                 <label for="param-quotafissa">Quota Fissa Mensile Venditore (€/mese)</label>
-                <input type="number" id="param-quotafissa" value="20" step="0.5" min="0" max="100">
+                <input type="number" id="param-quotafissa" value="0" step="0.5" min="0" max="100">
             </div>
 
             <div class="param-field">
@@ -462,6 +477,7 @@
                 <label for="param-pun">PUN Medio del Periodo (€/kWh)</label>
                 <input type="number" id="param-pun" value="0.13" step="0.005" min="0.01" max="0.50">
             </div>
+            <div class="param-field full nota-metodo">Per semplicità si usa un prezzo medio unico. In bolletta si usa il prezzo medio <em>ponderato</em>: Σ(prezzo fascia × consumo fascia) / Σ(consumi).</div>
         </div>
 
         <div class="input-group" style="border-left-color:#48bb78;">
@@ -480,19 +496,19 @@
         </div>
 
         <canvas id="bollettaCanvas" width="600" height="600"></canvas>
-        <div class="area-caption">L'area del cerchio è proporzionale alla spesa totale mensile: il contorno tratteggiato indica lo scenario di riferimento (base).</div>
+        <div class="area-caption">Area del cerchio proporzionale alla spesa mensile; il contorno tratteggiato è lo scenario di riferimento.</div>
 
         <div class="legend-container">
             <div class="legend-column">
                 <div class="legend-title">Componente Energia</div>
                 <div class="legend-item">
                     <div class="legend-color" style="background:#63b3ed;"></div>
-                    <span class="legend-label">Quota Fissa (Commerc. + Trasporto)</span>
+                    <span class="legend-label">Quota Fissa (Commerc. + Rete + Oneri)</span>
                     <span class="legend-value" id="lv-fissa">€ 0,00</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background:#3182ce;"></div>
-                    <span class="legend-label">Energia: PUN (Ingrosso)</span>
+                    <span class="legend-label">Energia: PUN + Dispacciamento</span>
                     <span class="legend-value" id="lv-pun">€ 0,00</span>
                 </div>
                 <div class="legend-item">
@@ -506,12 +522,12 @@
                 <div class="legend-title">Oneri, Reti e Tasse</div>
                 <div class="legend-item">
                     <div class="legend-color" style="background:#ed8936;"></div>
-                    <span class="legend-label">Quota Potenza + Trasporto</span>
+                    <span class="legend-label">Quota Potenza (Rete + Oneri)</span>
                     <span class="legend-value" id="lv-trasporto">€ 0,00</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background:#48bb78;"></div>
-                    <span class="legend-label">Oneri di Sistema + Accise</span>
+                    <span class="legend-label">Rete + Oneri (var.) + Accise</span>
                     <span class="legend-value" id="lv-oneri">€ 0,00</span>
                 </div>
                 <div class="legend-item">
@@ -524,12 +540,12 @@
                     <span>Torta tratteggiata = scenario di default</span>
                 </div>
             </div>
-            <div class="legend-note">Nel grafico l'ampiezza dei tre spicchi "Energia" è mantenuta in una fascia leggibile (40–65% della torta); gli importi in € qui sopra restano quelli calcolati esattamente.</div>
+            <div class="legend-note">Gli spicchi "Energia" sono compressi in una fascia 40–65% solo per leggibilità grafica; gli importi in € restano esatti.</div>
         </div>
 
         <div class="impatto-panel">
             <div class="impatto-title">Cosa incide davvero sulla bolletta?</div>
-            <div class="impatto-sub">Escursione di costo mensile ottenibile muovendo ciascuna leva da sola sull'intero range disponibile, a parità delle altre condizioni.</div>
+            <div class="impatto-sub">Escursione di costo mensile per leva, singolarmente, a parità delle altre condizioni.</div>
 
             <div class="impatto-riga">
                 <div class="impatto-riga-header">
@@ -561,7 +577,7 @@
             <div class="impatto-conclusione" id="impatto-conclusione">
                 A parità di altre condizioni, la leva di consumo/potenza pesa più della negoziazione tariffaria sul totale in bolletta.
             </div>
-            <div class="impatto-nota-limite">Il confronto non include l'effetto del costo orario/quartorario dell'energia (spostamento dei consumi nelle fasce più economiche), che nella pratica amplifica ulteriormente il peso della corretta gestione dei consumi rispetto alla sola trattativa sul prezzo.</div>
+            <div class="impatto-nota-limite">Non include l'effetto del costo orario/quartorario dell'energia, che amplificherebbe ulteriormente il peso dei consumi.</div>
         </div>
     </div>
 </div>
@@ -578,20 +594,25 @@
     // --- Scenario di default (per la torta "ghost" di confronto) ---
     const DEFAULT_CONSO = 10000;
     const DEFAULT_SPREAD = 0.015;
-    const DEFAULT_PUN = 0.13;
+    const DEFAULT_PUN = 0.15;
     const DEFAULT_POTENZA = 30;
-    const DEFAULT_QUOTA_FISSA = 20;
+    const DEFAULT_QUOTA_FISSA = 0;
 
-    // --- Costanti strutturali "nascoste" dello scontrino (trasporto/oneri/accise) ---
-    const TRASPORTO_FISSO_MENSILE = 3.00;   // quota fissa trasporto, €/mese (dentro "Energia: Quota Fissa")
-    const TARIFFA_TRASPORTO_KW = 4.00;      // quota potenza -> Trasporto BT, €/kW/mese
-    const TRASPORTO_KWH = 0.010;            // trasporto variabile -> kWh, €/kWh
-    const ONERI_KWH = 0.020;                // oneri di sistema -> kWh, €/kWh
-    const ACCISA_KWH = 0.0125;              // accisa erariale (scaglione business) -> kWh, €/kWh
-    const CAPACITA_KW = 1.00;               // corrispettivo di capacità -> Potenza incide su Energia, €/kW/mese
-    const ACCISA_POTENZA_KW = 0.50;         // quota accisa legata alla Potenza, €/kW/mese
-    const IVA_RATE_DOMESTICO = 0.10;        // IVA agevolata uso domestico
-    const IVA_RATE_BUSINESS = 0.22;         // IVA ordinaria per usi non domestici (PMI, attività)
+    // --- Costanti "Rete + Oneri di Sistema" calibrate sui prezzi unitari ufficiali ARERA
+    //     (BT Altri Usi, verificati su bolletta reale Enel periodo 07/2026):
+    //     fissa trasporto 58,564567 + perequativa 8,148125 + Asos fissa 30,017400 + Arim fissa 6,996520 = 103,73 €/mese
+    //     potenza trasporto 2,362442 + Arim potenza 1,063000 + 0,247700 = 3,6731 €/kW/mese
+    //     consumi trasporto 0,011640+0,001110 + Asos 0,032051 + Arim 0,0013337 = 0,046135 €/kWh
+    const QUOTA_FISSA_RETE_ONERI_MESE = 103.73;
+    const QUOTA_POTENZA_RETE_ONERI_KW = 3.6731;
+    const QUOTA_CONSUMI_RETE_ONERI_KWH = 0.046135;
+    // Accisa erariale, scaglione "altri usi" fino a 200.000 kWh/mese (0,0125 €/kWh, confermata da bolletta reale)
+    const ACCISA_KWH = 0.0125;
+    // Dispacciamento/capacità/sbilanciamento: pass-through di sistema incluso nel prezzo dell'energia
+    // dal venditore (in bolletta reale: "Altri importi materia energia" ≈ 0,038 €/kWh)
+    const DISPACCIAMENTO_ENERGIA_KWH = 0.038;
+    const IVA_RATE_DOMESTICO = 0.10;        // IVA agevolata (domestico o casi specifici di legge)
+    const IVA_RATE_BUSINESS = 0.22;         // IVA ordinaria per la generalità delle forniture non domestiche
 
     // --- Fascia di leggibilità per il gruppo "Energia" nel grafico a torta ---
     const ENERGY_SHARE_MIN = 0.40;
@@ -617,23 +638,25 @@
         return document.getElementById('uso-domestico').checked ? IVA_RATE_DOMESTICO : IVA_RATE_BUSINESS;
     }
 
-    // Struttura a "scontrino dell'energia": fissa + potenza + variabili (energia+trasporto+oneri) + imposte
+    // Struttura a "scontrino dell'energia" allineata al formato ufficiale ARERA:
+    // Quota Fissa (venditore + rete + oneri) + Quota Potenza (rete + oneri) +
+    // Energia (PUN + dispacciamento + spread) + Rete/oneri variabili + Accisa + IVA
     function calcolaScontrino(consumo, spread, pun, potenza, quotaFissaMensile, ivaRate) {
-        const e_fissa = quotaFissaMensile + TRASPORTO_FISSO_MENSILE;
-        const e_pun = consumo * pun + potenza * CAPACITA_KW;
+        const e_fissa = quotaFissaMensile + QUOTA_FISSA_RETE_ONERI_MESE;
+        const e_pun = consumo * (pun + DISPACCIAMENTO_ENERGIA_KWH);
         const e_spread = consumo * spread;
 
-        const quotaPotenza = potenza * TARIFFA_TRASPORTO_KW;
-        const trasportoVar = consumo * TRASPORTO_KWH;
-        const trasportoTotale = quotaPotenza + trasportoVar;
+        const quotaPotenza = potenza * QUOTA_POTENZA_RETE_ONERI_KW;
 
-        const oneriVar = consumo * ONERI_KWH + consumo * ACCISA_KWH + potenza * ACCISA_POTENZA_KW;
+        const reteOneriVar = consumo * QUOTA_CONSUMI_RETE_ONERI_KWH;
+        const accisa = consumo * ACCISA_KWH;
+        const oneriVar = reteOneriVar + accisa;
 
-        const subtotale = e_fissa + e_pun + e_spread + trasportoTotale + oneriVar;
+        const subtotale = e_fissa + e_pun + e_spread + quotaPotenza + oneriVar;
         const iva = subtotale * ivaRate;
 
         return {
-            voci: [e_fissa, e_pun, e_spread, trasportoTotale, oneriVar, iva],
+            voci: [e_fissa, e_pun, e_spread, quotaPotenza, oneriVar, iva],
             totale: subtotale + iva
         };
     }
