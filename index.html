@@ -434,7 +434,7 @@
 
         <div class="input-group">
             <label for="input-consumo">📊 Consumo del Periodo (kWh/mese)</label>
-            <input type="range" id="input-consumo" min="500" max="50000" step="500" value="10000">
+            <input type="range" id="input-consumo" min="500" max="50000" step="100" value="10000">
             <div class="input-values">
                 <span>Min: 500</span>
                 <span id="val-consumo" style="color:#2b6cb0; font-size:16px;">10000 kWh</span>
@@ -442,13 +442,13 @@
             </div>
             <div class="valore-esatto-row">
                 <label for="input-consumo-esatto">Valore esatto (kWh/mese)</label>
-                <input type="number" id="input-consumo-esatto" min="500" max="50000" step="1" value="10000">
+                <input type="text" inputmode="decimal" id="input-consumo-esatto" value="10000" placeholder="es. 19683">
             </div>
         </div>
 
         <div class="input-group tariffa">
             <label for="input-tariffa">📈 Tariffa / Spread del Venditore (€/kWh)</label>
-            <input type="range" id="input-tariffa" min="0.000" max="0.040" step="0.002" value="0.015">
+            <input type="range" id="input-tariffa" min="0.000" max="0.040" step="0.001" value="0.015">
             <div class="input-values">
                 <span>0.000 €</span>
                 <span id="val-tariffa" style="color:#0b3c5d; font-size:16px;">0.015 €/kWh</span>
@@ -456,7 +456,7 @@
             </div>
             <div class="valore-esatto-row">
                 <label for="input-tariffa-esatto">Valore esatto (€/kWh)</label>
-                <input type="number" id="input-tariffa-esatto" min="0" max="0.040" step="0.0001" value="0.015">
+                <input type="text" inputmode="decimal" id="input-tariffa-esatto" value="0.015" placeholder="es. 0,015">
             </div>
         </div>
 
@@ -466,7 +466,7 @@
 
             <div class="param-field full">
                 <label for="param-quotafissa">Quota Fissa Mensile Venditore (€/mese)</label>
-                <input type="number" id="param-quotafissa" value="0" step="0.5" min="0" max="100">
+                <input type="number" id="param-quotafissa" value="15" step="0.5" min="0" max="100">
             </div>
 
             <div class="param-field">
@@ -502,37 +502,37 @@
             <div class="legend-column">
                 <div class="legend-title">Componente Energia</div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background:#63b3ed;"></div>
-                    <span class="legend-label">Quota Fissa (Commerc. + Rete + Oneri)</span>
+                    <div class="legend-color" style="background:#90cdf4;"></div>
+                    <span class="legend-label">Quota Fissa Venditore</span>
                     <span class="legend-value" id="lv-fissa">€ 0,00</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background:#3182ce;"></div>
-                    <span class="legend-label">Energia: PUN + Dispacciamento</span>
-                    <span class="legend-value" id="lv-pun">€ 0,00</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background:#0b3c5d;"></div>
                     <span class="legend-label">Energia: Spread / Tariffa</span>
                     <span class="legend-value" id="lv-spread">€ 0,00</span>
                 </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background:#3182ce;"></div>
+                    <span class="legend-label">Energia: PUN + Dispacciamento</span>
+                    <span class="legend-value" id="lv-pun">€ 0,00</span>
+                </div>
             </div>
 
             <div class="legend-column">
-                <div class="legend-title">Oneri, Reti e Tasse</div>
+                <div class="legend-title">Rete, Oneri e Tasse (regolati)</div>
                 <div class="legend-item">
                     <div class="legend-color" style="background:#ed8936;"></div>
-                    <span class="legend-label">Quota Potenza (Rete + Oneri)</span>
+                    <span class="legend-label">Trasporto e Gestione Contatore</span>
                     <span class="legend-value" id="lv-trasporto">€ 0,00</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background:#48bb78;"></div>
-                    <span class="legend-label">Rete + Oneri (var.) + Accise</span>
+                    <span class="legend-label">Oneri di Sistema (ASOS+ARIM)</span>
                     <span class="legend-value" id="lv-oneri">€ 0,00</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background:#9f7aea;"></div>
-                    <span class="legend-label" id="lv-iva-label">IVA (22% sul subtotale)</span>
+                    <span class="legend-label" id="lv-iva-label">Imposte (Accisa + IVA 22%)</span>
                     <span class="legend-value" id="lv-iva">€ 0,00</span>
                 </div>
                 <div class="legend-ghost">
@@ -596,16 +596,23 @@
     const DEFAULT_SPREAD = 0.015;
     const DEFAULT_PUN = 0.15;
     const DEFAULT_POTENZA = 30;
-    const DEFAULT_QUOTA_FISSA = 0;
+    const DEFAULT_QUOTA_FISSA = 15;
 
-    // --- Costanti "Rete + Oneri di Sistema" calibrate sui prezzi unitari ufficiali ARERA
-    //     (BT Altri Usi, verificati su bolletta reale Enel periodo 07/2026):
-    //     fissa trasporto 58,564567 + perequativa 8,148125 + Asos fissa 30,017400 + Arim fissa 6,996520 = 103,73 €/mese
-    //     potenza trasporto 2,362442 + Arim potenza 1,063000 + 0,247700 = 3,6731 €/kW/mese
-    //     consumi trasporto 0,011640+0,001110 + Asos 0,032051 + Arim 0,0013337 = 0,046135 €/kWh
-    const QUOTA_FISSA_RETE_ONERI_MESE = 103.73;
-    const QUOTA_POTENZA_RETE_ONERI_KW = 3.6731;
-    const QUOTA_CONSUMI_RETE_ONERI_KWH = 0.046135;
+    // --- Costanti "Trasporto" e "Oneri di Sistema" scisse separatamente, calibrate sui
+    //     prezzi unitari ufficiali ARERA (BT Altri Usi, verificati riga per riga sulla
+    //     bolletta reale Enel periodo 07/2026):
+    //     Trasporto: fissa 58,564567 + perequativa 8,148125 = 66,71 €/mese
+    //                potenza 2,362442 €/kW/mese
+    //                consumi 0,011640 + 0,001110 = 0,01275 €/kWh
+    //     Oneri di Sistema (ASOS+ARIM): fissa 30,017400 + 6,996520 = 37,01 €/mese
+    //                potenza 1,063000 + 0,247700 = 1,3107 €/kW/mese
+    //                consumi 0,032051 + 0,0013337 = 0,033385 €/kWh
+    const TRASPORTO_FISSA_MESE = 66.71;
+    const TRASPORTO_POTENZA_KW = 2.362442;
+    const TRASPORTO_CONSUMI_KWH = 0.01275;
+    const ONERI_FISSA_MESE = 37.01;
+    const ONERI_POTENZA_KW = 1.3107;
+    const ONERI_CONSUMI_KWH = 0.033385;
     // Accisa erariale, scaglione "altri usi" fino a 200.000 kWh/mese (0,0125 €/kWh, confermata da bolletta reale)
     const ACCISA_KWH = 0.0125;
     // Dispacciamento/capacità/sbilanciamento: pass-through di sistema incluso nel prezzo dell'energia
@@ -638,26 +645,27 @@
         return document.getElementById('uso-domestico').checked ? IVA_RATE_DOMESTICO : IVA_RATE_BUSINESS;
     }
 
-    // Struttura a "scontrino dell'energia" allineata al formato ufficiale ARERA:
-    // Quota Fissa (venditore + rete + oneri) + Quota Potenza (rete + oneri) +
-    // Energia (PUN + dispacciamento + spread) + Rete/oneri variabili + Accisa + IVA
+    // Struttura a 4 macro-voci (Energia / Trasporto / Oneri di Sistema / Imposte),
+    // con l'Energia scissa nelle sue 3 sotto-componenti (Fissa Venditore, Spread, PUN+Dispacciamento).
+    // Trasporto e Oneri di Sistema restano distinti (non più accorpati), come da
+    // composizione classica ARERA della bolletta.
     function calcolaScontrino(consumo, spread, pun, potenza, quotaFissaMensile, ivaRate) {
-        const e_fissa = quotaFissaMensile + QUOTA_FISSA_RETE_ONERI_MESE;
-        const e_pun = consumo * (pun + DISPACCIAMENTO_ENERGIA_KWH);
+        const e_fissa_venditore = quotaFissaMensile;
         const e_spread = consumo * spread;
+        const e_pun = consumo * (pun + DISPACCIAMENTO_ENERGIA_KWH);
 
-        const quotaPotenza = potenza * QUOTA_POTENZA_RETE_ONERI_KW;
-
-        const reteOneriVar = consumo * QUOTA_CONSUMI_RETE_ONERI_KWH;
+        const trasporto = TRASPORTO_FISSA_MESE + potenza * TRASPORTO_POTENZA_KW + consumo * TRASPORTO_CONSUMI_KWH;
+        const oneriSistema = ONERI_FISSA_MESE + potenza * ONERI_POTENZA_KW + consumo * ONERI_CONSUMI_KWH;
         const accisa = consumo * ACCISA_KWH;
-        const oneriVar = reteOneriVar + accisa;
 
-        const subtotale = e_fissa + e_pun + e_spread + quotaPotenza + oneriVar;
-        const iva = subtotale * ivaRate;
+        const subtotaleAnteAccisa = e_fissa_venditore + e_spread + e_pun + trasporto + oneriSistema;
+        const imponibileIva = subtotaleAnteAccisa + accisa;
+        const iva = imponibileIva * ivaRate;
+        const imposte = accisa + iva;
 
         return {
-            voci: [e_fissa, e_pun, e_spread, quotaPotenza, oneriVar, iva],
-            totale: subtotale + iva
+            voci: [e_fissa_venditore, e_spread, e_pun, trasporto, oneriSistema, imposte],
+            totale: imponibileIva + iva
         };
     }
 
@@ -696,7 +704,7 @@
 
     function drawPieFilled(centerX, centerY, vociVisual, totale, raggio) {
         let startAngle = -Math.PI / 2;
-        const colori = ['#63b3ed', '#3182ce', '#0b3c5d', '#ed8936', '#48bb78', '#9f7aea'];
+        const colori = ['#90cdf4', '#0b3c5d', '#3182ce', '#ed8936', '#48bb78', '#9f7aea'];
 
         vociVisual.forEach((valore, i) => {
             const fettaAngolo = totale > 0 ? (valore / totale) * (Math.PI * 2) : 0;
@@ -752,12 +760,12 @@
 
     function aggiornaLegenda(voci, totale, ivaRate) {
         document.getElementById('lv-fissa').textContent = formattaEuro(voci[0]);
-        document.getElementById('lv-pun').textContent = formattaEuro(voci[1]);
-        document.getElementById('lv-spread').textContent = formattaEuro(voci[2]);
+        document.getElementById('lv-spread').textContent = formattaEuro(voci[1]);
+        document.getElementById('lv-pun').textContent = formattaEuro(voci[2]);
         document.getElementById('lv-trasporto').textContent = formattaEuro(voci[3]);
         document.getElementById('lv-oneri').textContent = formattaEuro(voci[4]);
         document.getElementById('lv-iva').textContent = formattaEuro(voci[5]);
-        document.getElementById('lv-iva-label').textContent = 'IVA (' + Math.round(ivaRate * 100) + '% sul subtotale)';
+        document.getElementById('lv-iva-label').textContent = 'Imposte (Accisa + IVA ' + Math.round(ivaRate * 100) + '%)';
 
         document.getElementById('val-totale').textContent = formattaEuro(totale);
 
